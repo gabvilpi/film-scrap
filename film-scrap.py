@@ -2,6 +2,7 @@ import urllib
 import urllib.request
 import urllib.error
 import itertools
+import re
 
 '''
 La función download descarga una web indicando el nombre del agente y el número de reintentos.
@@ -34,4 +35,11 @@ for i in testList:
         if page is None:
             break
         else:
-            print(page.read())
+            # Extraemos los identificadores de pelicula de cada una de las páginas
+            id = re.findall('data-movie-id="(.*?)"', str(page.read()))
+            # Descargamos la página de cada película a partir de su identificador
+            for j in id:
+                movie = download("https://www.filmaffinity.com/es/film" + str(j) + ".html")
+                if page is not None:
+                    # (PENDIENTE) Una vez descargada la página extraemos la información de la película
+                    print(movie.read())
