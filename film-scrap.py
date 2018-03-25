@@ -3,6 +3,7 @@ import urllib.request
 import urllib.error
 import itertools
 import re
+from bs4 import BeautifulSoup
 
 '''
 La función download descarga una web indicando el nombre del agente y el número de reintentos.
@@ -42,4 +43,22 @@ for i in testList:
                 movie = download("https://www.filmaffinity.com/es/film" + str(j) + ".html")
                 if page is not None:
                     # (PENDIENTE) Una vez descargada la página extraemos la información de la película
-                    print(movie.read())
+                     #print(movie.read())
+
+                    # Parseamos el código HTML para navegar por las etiquetas
+                    soup = BeautifulSoup(movie, 'html.parser')
+
+                    # Vemos el código HTML correctamente 
+                    #fixed_html = soup.prettify()
+                    #print(fixed_html)
+                    
+                    # Buscamos entre las etiquetas dl la que tenga la clase movie-info
+                    dl = soup.find('dl', attrs={'class':'movie-info'})
+
+                    # Vemos solo la parte de movie-info
+                    # print(dl)
+
+                    #Seleccionamos el primer elemento dd
+                    dd = dl.find('dd')
+                    titulo = dd.text
+                    print(titulo)
