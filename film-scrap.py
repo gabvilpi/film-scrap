@@ -58,7 +58,11 @@ for i in testList:
                     # Vemos solo la parte de movie-info
                     # print(dl)
 
-                    #Seleccionamos el primer elemento dd
+                    # Seleccionamos el primer elemento dd
                     dd = dl.find('dd')
-                    titulo = dd.text
+                    titulo = dd.text.strip()
+
+                    # quitamos 'aka' en los casos en los que existe un alias en el titulo
+                    if titulo[-3:] == 'aka': titulo = titulo[:-3].strip()
+
                     print(titulo)
