@@ -36,6 +36,9 @@ testList2 = ("X", "Y")
 # inicializamos una lista para cada campo que queremos guardar
 id_list = []
 titulo_list = []
+web_list = []
+año_list = []
+duracion_list = []
 
 
 
@@ -50,7 +53,8 @@ for i in testList:
             id = re.findall('data-movie-id="(.*?)"', str(page.read()))
             # Descargamos la página de cada película a partir de su identificador
             for j in id:
-                movie = download("https://www.filmaffinity.com/es/film" + j + ".html")
+                movie_url = "https://www.filmaffinity.com/es/film" + j + ".html"
+                movie = download(movie_url)
                 if page is not None:
                     # (PENDIENTE) Una vez descargada la página extraemos la información de la película
                     # print(movie.read())
@@ -62,6 +66,7 @@ for i in testList:
                     #fixed_html = soup.prettify()
                     #print(fixed_html)
 
+                # extraemos nombre
                     # Buscamos entre las etiquetas dl la que tenga la clase movie-info
                     dl = soup.find('dl', attrs={'class': 'movie-info'})
 
@@ -75,18 +80,35 @@ for i in testList:
                     # quitamos 'aka' en los casos en los que existe en el titulo
                     if titulo[-3:] == 'aka': titulo = titulo[:-3].strip()
 
-                    print('id: %d , titulo: %s' % (int(j), titulo))
-                    type(j)
+                    #print('id: %d , titulo: %s' % (int(j), titulo))
+                    
+                # extraemos año
+                    dl = soup.find('dd', attrs={'itemprop': 'datePublished'})
+                    año = int(dl.text.strip())
+                    
+                # extraemos duracion
+                    dl = soup.find('dd', attrs={'itemprop': 'duration'})
+                    if dl != None: duracion = dl.text.strip().split()[0]
+                    else: duracion = 'NA'
+                
                     
                     # añadimos a cada una de las listas el dato correspondiente a la ultima pelicula
                     id_list.append(int(j))
                     titulo_list.append(titulo)
+                    web_list.append(movie_url)
+                    año_list.append(año)
+                    duracion_list.append(duracion)
                    
 # creamos una dataframe con  todas las listas
-df = pd.DataFrame({'id' : id_list, 'titulo': titulo_list }) 
+df = pd.DataFrame({'id': id_list, 
+                   'titulo': titulo_list, 
+                   'web': web_list, 
+                   'año': año_list, 
+                   'duracion (min)': duracion_list},
+                  columns = ['id', 'titulo', 'año', 'duracion (min)', 'web']) 
 
 # guardamos la dataframe a disco
 df.to_csv('filmaffinity.csv', encoding='utf-8')   
 
-
+df.head()
                     
