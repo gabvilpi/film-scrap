@@ -65,22 +65,44 @@ def scrap(movie):
         else:
             duracion = 'NA'
 
+        # extraemos país
+        span = soup.find('span', attrs={'id': 'country-img'})
+        img = span.find_all('img')[0]['alt']
+        if img != None:
+            pais = img
+            print(pais)
+        else:
+            pais = 'NA'
+
+
+       # extraemos sinopsis
+        dl = soup.find('dd', attrs={'itemprop': 'description'})
+        if dl != None:
+            sinopsis = dl.text.strip()
+        else:
+            sinopsis = 'NA'
+
+        
         # añadimos a cada una de las listas el dato correspondiente a la ultima pelicula
         id_list.append(int(j))
         titulo_list.append(titulo)
         año_list.append(año)
         duracion_list.append(duracion)
+        pais_list.append(pais)
+        sinopsis_list.append(sinopsis)
         web_list.append(movie_url)
 
-def saveData(id_list, titulo_list, año_list, duracion_list, web_list):
+def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, sinopsis_list,web_list):
     # creamos una dataframe con  todas las listas
     df = pd.DataFrame({'id': id_list,
                        'titulo': titulo_list,
                        'año': año_list,
                        'duracion (min)': duracion_list,
+                       'pais': pais_list,
+                       'sinopsis': sinopsis_list,
                        'web': web_list,
                        },
-                      columns=['id', 'titulo', 'año', 'duracion (min)', 'web'])
+                      columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'sinopsis', 'web'])
 
     # guardamos la dataframe a disco
     df.to_csv('filmaffinity.csv', encoding='utf-8')
@@ -107,6 +129,8 @@ id_list = []
 titulo_list = []
 año_list = []
 duracion_list = []
+pais_list = []
+sinopsis_list = []
 web_list = []
 
 # Bucle principal: Recorremos la sección de todas las películas según list e itertools.cout hasta llegar a una página que no existe
@@ -132,6 +156,6 @@ for i in testList:
                     contador += 1
 
 # Finalmente almacenamos los datos en Disco
-saveData(id_list, titulo_list, año_list, duracion_list, web_list)
+saveData(id_list, titulo_list, año_list, duracion_list, pais_list,sinopsis_list, web_list)
 
 print(contador)
