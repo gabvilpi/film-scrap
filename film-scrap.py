@@ -7,24 +7,36 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import os
 
+# movielist contiene el orden alfabético que se recorrerá en la sección "Todas las películas" de filmaffinity
+movielist = (
+"0-9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
+"W", "X", "Y", "Z")
 
-# inicializacion
+# testList es un listado de prueba
+testList = ("X", "Y", "Z")
 
-movies_id = 0
-new_movies_id = 0
-df = 0
-new_df = 0
+# Contador de películas descargadas
+contador = 0
 
+# Listado que contendrá los IDs de películas de esta sesión
+ident_list = []
+
+# inicializamos una lista para cada campo que queremos guardar
+id_list = []
+titulo_list = []
+año_list = []
+duracion_list = []
+pais_list = []
+sinopsis_list = []
+web_list = []
+
+# definición de función de descarga de la URL
 def download(url, user_agent="gabvilpi", num_retries=2):
     headers = {'User-agent': user_agent}
     request = urllib.request.Request(url=url, headers=headers)
     print("Downloading:", url)
     try:
         html = urllib.request.urlopen(request)
-# HACE FALTA UNA INSTRUCCION QUE PARE EL DOWNLOAD SI SOBREPASAMOS EL LIMITE. HE INTENTADO ESTO PERO NO FUNCIONA
-#        if '<title>Too many request</title>' in str(html.read()): 
-#            return None
-#            print('Too many downloads. Try later')
     except urllib.error.URLError as e:
         print("Download error:", e.reason)
         html = None
@@ -104,6 +116,7 @@ def scrap(movie):
         sinopsis_list.append(sinopsis)
         web_list.append(movie_url)
 
+# Definición de la función de guardado de datos
 def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, sinopsis_list,web_list):
 
     if os.path.exists('filmaffinity.csv'): 
@@ -140,31 +153,6 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, sinopsis
     df.to_csv('filmaffinity.csv', index = False , encoding='utf-8')
     movies_id.to_csv('movies_id.csv', index = False, encoding = 'utf-8')
 
-
-# movielist contiene el orden alfabético que se recorrerá en la sección "Todas las películas" de filmaffinity
-movielist = (
-"0-9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
-"W", "X", "Y", "Z")
-
-# testList es un listado de prueba
-testList = ("X")
-testList2 = ("Z")
-
-# Contador de peliculas descargadas
-contador = 0
-
-# stop para el bucle principal cuando ha habido un error en el scrap
-stop = False
-
-# inicializamos una lista para cada campo que queremos guardar
-id_list = []
-titulo_list = []
-año_list = []
-duracion_list = []
-pais_list = []
-sinopsis_list = []
-web_list = []
-
 # bucle para descargar las ids de todo filmaffinity
 if os.path.exists('movies_id.csv'): 
 #    print('movies_id exists')
@@ -172,42 +160,58 @@ if os.path.exists('movies_id.csv'):
 else:
 #    print('movies_id does not exist')
     movies_id = pd.DataFrame({'id':[],'downloaded':[]}, columns = ['id', 'downloaded'])
-    
-ident_list = []
 
-for i in testList2:
-    for num in itertools.count(1):
-        url = "https://www.filmaffinity.com/es/allfilms_" + i + "_" + str(num) + ".html"
-        page = download(url)
-        if page is None or stop:
-            break
-        else:
-            # Extraemos los identificadores de pelicula de cada una de las páginas
-            id = re.findall('data-movie-id="(.*?)"', str(page.read()))
-            for j in id:
-                if int(j) not in list(movies_id['id']): 
-                    ident_list.append(j)
+# stop para el bucle principal cuando ha habido un error en el scrap
+stop = False
+
+for i in testList:
+    # Si se ha llegado al límite de peticiones al servidor paramos el bucle principal
+    if stop:
+        break
+    else:
+        for num in itertools.count(1):
+            url = "https://www.filmaffinity.com/es/allfilms_" + i + "_" + str(num) + ".html"
+            page = download(url)
+            # Si la página descargada está vacía pasamos al siguiente valor de i
+            if page is None:
+                break
+            else:
+                content = page.read()
+                # Si llegamos al límite de peticiones al servidor paramos el bucle principal
+                if re.search('Too many requests', str(content)):
+                    print("Error: Too many requests")
+                    stop = True
+                    break
+                else:
+                    # Extraemos los identificadores de pelicula de cada una de las páginas
+                    id = re.findall('data-movie-id="(.*?)"', str(content))
+                    for j in id:
+                        if int(j) not in list(movies_id['id']):
+                            ident_list.append(j)
                     
-downloaded_list = [0]*len(ident_list)                    
-new_movies_id = pd.DataFrame({'id':ident_list, 'downloaded':downloaded_list}, columns=['id', 'downloaded'])                
+if not ident_list:
+    print("La lista de películas a descargar está vacía. Fin del programa.")
+else:
+    downloaded_list = [0]*len(ident_list)
+    new_movies_id = pd.DataFrame({'id':ident_list, 'downloaded':downloaded_list}, columns=['id', 'downloaded'])
 
-movies_id = movies_id.append(new_movies_id)
+    movies_id = movies_id.append(new_movies_id)
 
-#movies_id.to_csv('movies_id.csv', index = False, encoding='utf-8')
+    #movies_id.to_csv('movies_id.csv', index = False, encoding='utf-8')
 
-# Descargamos la página de cada película a partir de su identificador
-for j in movies_id.loc[movies_id['downloaded']==0, 'id']:
-    movie_url = "https://www.filmaffinity.com/es/film" + str(int(j)) + ".html"
-    movie = download(movie_url)
-    if movie is not None:
-        # Realizamos scrap de la web de la película. Si la función devuelve True paramos el bucle (Too many requests?)
-        if scrap(movie):
-            stop = True
-            break
-        # incrementamos el contador de películas descargadas
-        contador += 1
-        movies_id.loc[movies_id['id']==j, 'downloaded'] = int(1)
+    # Descargamos la página de cada película a partir de su identificador
+    for j in movies_id.loc[movies_id['downloaded']==0, 'id']:
+        movie_url = "https://www.filmaffinity.com/es/film" + str(int(j)) + ".html"
+        movie = download(movie_url)
+        if movie is not None:
+            # Realizamos scrap de la web de la película. Si la función devuelve True paramos el bucle (Too many requests?)
+            if scrap(movie):
+                print("Error: Fallo en el scrap. Posible too many requests.")
+                break
+            # incrementamos el contador de películas descargadas
+            contador += 1
+            movies_id.loc[movies_id['id']==j, 'downloaded'] = int(1)
 
-# Finalmente almacenamos los datos en Disco
-saveData(id_list, titulo_list, año_list, duracion_list, pais_list,sinopsis_list, web_list)
-print('Finished')
+    # Finalmente almacenamos los datos en Disco
+    saveData(id_list, titulo_list, año_list, duracion_list, pais_list,sinopsis_list, web_list)
+    print('Terminado. Películas descargadas: ', contador)
