@@ -29,6 +29,9 @@ duracion_list = []
 pais_list = []
 sinopsis_list = []
 web_list = []
+direccion_list = []
+reparto_list = []
+genero_list = []
 
 # definición de función de descarga de la URL
 def download(url, user_agent="gabvilpi", num_retries=2):
@@ -94,9 +97,10 @@ def scrap(movie):
         img = span.find_all('img')[0]['alt']
         if img != None:
             pais = img
-            #print(pais)
+            print(pais)
         else:
             pais = 'NA'
+
 
 
        # extraemos sinopsis
@@ -105,6 +109,26 @@ def scrap(movie):
             sinopsis = dl.text.strip()
         else:
             sinopsis = 'NA'
+
+
+        #extraemos direccion
+        a_directores = []
+        direccion = soup.find('dl', attrs={'class': 'directors'})
+        for directors in soup.find_all('span', attrs={'itemprop': 'director'}):
+            directors_name = soup.find('span', attrs={'itemprop': 'name'})
+            a_directores.append(directors_name.text.strip())
+
+        # extraemos reparto
+        a_actores =[]
+        for actors in soup.find_all('span', attrs={'itemprop': 'actor'}):
+            actors_name = soup.find('span', attrs={'itemprop': 'name'})
+            a_actores.append(actors_name.text.strip())
+
+        # extraemos genero
+
+        a_genero = []
+        for genero in soup.find_all("span", attrs={'itemprop': 'genre'}):
+            a_genero.append(i.get_text())
 
         
         # añadimos a cada una de las listas el dato correspondiente a la ultima pelicula
