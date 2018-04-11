@@ -27,11 +27,11 @@ titulo_list = []
 año_list = []
 duracion_list = []
 pais_list = []
-sinopsis_list = []
-web_list = []
 direccion_list = []
 reparto_list = []
 genero_list = []
+sinopsis_list = []
+web_list = []
 
 # definición de función de descarga de la URL
 def download(url, user_agent="gabvilpi", num_retries=2):
@@ -74,16 +74,20 @@ def scrap(movie):
 
         # Seleccionamos el primer elemento dd
         dd = dl.find('dd')
-        titulo = dd.text.strip()
-
-        # quitamos 'aka' en los casos en los que existe en el titulo
-        if titulo[-3:] == 'aka': titulo = titulo[:-3].strip()
-
-        # print('id: %d , titulo: %s' % (int(j), titulo))
+        if dd != None:
+            titulo = dd.text.strip()
+            # quitamos 'aka' en los casos en los que existe en el titulo
+            if titulo[-3:] == 'aka': titulo = titulo[:-3].strip()
+            # print('id: %d , titulo: %s' % (int(j), titulo))
+        else:
+            titulo = 'NA'
 
         # extraemos año
         dl = soup.find('dd', attrs={'itemprop': 'datePublished'})
-        año = int(dl.text.strip())
+        if dl != None:
+            año = int(dl.text.strip())
+        else:
+            año = 'NA'
 
         # extraemos duracion
         dl = soup.find('dd', attrs={'itemprop': 'duration'})
@@ -97,11 +101,9 @@ def scrap(movie):
         img = span.find_all('img')[0]['alt']
         if img != None:
             pais = img
-            print(pais)
+            #print(pais)
         else:
             pais = 'NA'
-
-
 
        # extraemos sinopsis
         dl = soup.find('dd', attrs={'itemprop': 'description'})
@@ -110,38 +112,49 @@ def scrap(movie):
         else:
             sinopsis = 'NA'
 
-
         #extraemos direccion
         a_directores = []
-        direccion = soup.find('dl', attrs={'class': 'directors'})
-        for directors in soup.find_all('span', attrs={'itemprop': 'director'}):
-            directors_name = soup.find('span', attrs={'itemprop': 'name'})
-            a_directores.append(directors_name.text.strip())
+        direccion = soup.find('dd', attrs={'class': 'directors'})
+        if direccion is None:
+            a_directores.append('NA')
+        else:
+            for directors in direccion.find_all('span', attrs={'itemprop': 'director'}):
+                directors_name = directors.find('span', attrs={'itemprop': 'name'})
+                a_directores.append(directors_name.text.strip())
 
         # extraemos reparto
         a_actores =[]
         for actors in soup.find_all('span', attrs={'itemprop': 'actor'}):
-            actors_name = soup.find('span', attrs={'itemprop': 'name'})
-            a_actores.append(actors_name.text.strip())
+            if actors is None:
+                a_actores.append('NA')
+                break
+            else:
+                actors_name = actors.find('span', attrs={'itemprop': 'name'})
+                a_actores.append(actors_name.text.strip())
 
         # extraemos genero
-
         a_genero = []
         for genero in soup.find_all("span", attrs={'itemprop': 'genre'}):
-            a_genero.append(i.get_text())
+            if genero is None:
+                a_genero.append('NA')
+                break
+            else:
+                a_genero.append(genero.a.contents)
 
-        
         # añadimos a cada una de las listas el dato correspondiente a la ultima pelicula
         id_list.append(int(j))
         titulo_list.append(titulo)
         año_list.append(año)
         duracion_list.append(duracion)
         pais_list.append(pais)
+        direccion_list.append(a_directores)
+        reparto_list.append(a_actores)
+        genero_list.append(a_genero)
         sinopsis_list.append(sinopsis)
         web_list.append(movie_url)
 
 # Definición de la función de guardado de datos
-def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, sinopsis_list,web_list):
+def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, reparto_list, genero_list, sinopsis_list, web_list):
 
     if os.path.exists('filmaffinity.csv'): 
 #        print('filmaffinity exists')
@@ -153,10 +166,13 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, sinopsis
                            'año': [],
                            'duracion (min)': [],
                            'pais': [],
+                           'direccion': [],
+                           'reparto': [],
+                           'genero': [],
                            'sinopsis': [],
                            'web': [],
                            },
-                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'sinopsis', 'web'])
+                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'reparto', 'genero', 'sinopsis', 'web'])
 
         
     # creamos una dataframe con  todas las listas
@@ -165,10 +181,13 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, sinopsis
                            'año': año_list,
                            'duracion (min)': duracion_list,
                            'pais': pais_list,
+                           'direccion': direccion_list,
+                           'reparto': reparto_list,
+                           'genero': genero_list,
                            'sinopsis': sinopsis_list,
                            'web': web_list,
                            },
-                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'sinopsis', 'web'])
+                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'reparto', 'genero', 'sinopsis', 'web'])
 
     
     df = df.append(new_df)
@@ -237,5 +256,5 @@ else:
             movies_id.loc[movies_id['id']==j, 'downloaded'] = int(1)
 
     # Finalmente almacenamos los datos en Disco
-    saveData(id_list, titulo_list, año_list, duracion_list, pais_list,sinopsis_list, web_list)
+    saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, reparto_list, genero_list, sinopsis_list, web_list)
     print('Terminado. Películas descargadas: ', contador)
