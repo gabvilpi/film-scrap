@@ -6,14 +6,17 @@ import re
 from bs4 import BeautifulSoup
 import pandas as pd
 import os
+from random import shuffle
 
 # movielist contiene el orden alfabético que se recorrerá en la sección "Todas las películas" de filmaffinity
-movielist = (
+movielist = [
 "0-9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
-"W", "X", "Y", "Z")
+"W", "X", "Y", "Z"]
+shuffle(movielist)
 
 # testList es un listado de prueba
-testList = ("X", "Y", "Z")
+testList = ["X", "Y", "Z"]
+shuffle(testList)
 
 # Contador de películas descargadas
 contador = 0
@@ -77,7 +80,7 @@ def getFilms(ident_list):
             if movie is not None:
                 # Realizamos scrap de la web de la película. Si la función devuelve True paramos el bucle (Too many requests?)
                 if scrap(j, movie):
-                    print("Error: Fallo en el scrap. Posible too many requests.")
+                    print("Error: Fallo en el scrap. Posible too many requests. Ve a https://www.filmaffinity.com is pasa el captcha o vuelve a intentarlo en un rato")
                     break
                 # incrementamos el contador de películas descargadas
                 global contador
@@ -235,7 +238,7 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccio
 stop = False
 
 # bucle para descargar las ids de todo filmaffinity
-for i in testList:
+for i in movielist:
     # Si se ha llegado al límite de peticiones al servidor paramos el bucle principal
     if stop:
         break
