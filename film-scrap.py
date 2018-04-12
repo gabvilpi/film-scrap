@@ -1,3 +1,5 @@
+import socket
+import socks
 import urllib
 import urllib.request
 import urllib.error
@@ -7,6 +9,12 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import os
 from random import shuffle
+
+TOR = False
+
+if TOR:
+    socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, '127.0.0.1', 9150)
+    socket.socket = socks.socksocket
 
 # movielist contiene el orden alfabético que se recorrerá en la sección "Todas las películas" de filmaffinity
 movielist = [
