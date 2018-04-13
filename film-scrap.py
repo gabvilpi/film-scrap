@@ -10,6 +10,7 @@ import pandas as pd
 import os
 from random import shuffle
 
+# Habilitar TOR para peticiones anónimas. REQUIERE TOR INSTALADO!
 TOR = False
 
 if TOR:
@@ -39,6 +40,10 @@ año_list = []
 duracion_list = []
 pais_list = []
 direccion_list = []
+guion_list = []
+musica_list = []
+fotografia_list = []
+productora_list = []
 reparto_list = []
 genero_list = []
 sinopsis_list = []
@@ -131,7 +136,7 @@ def scrap(id, movie):
         # extraemos año
         dl = soup.find('dd', attrs={'itemprop': 'datePublished'})
         if dl != None:
-            año = int(dl.text.strip())
+            año = dl.text.strip().split()[0]
         else:
             año = 'NA'
 
@@ -151,13 +156,6 @@ def scrap(id, movie):
         else:
             pais = 'NA'
 
-       # extraemos sinopsis
-        dl = soup.find('dd', attrs={'itemprop': 'description'})
-        if dl != None:
-            sinopsis = dl.text.strip()
-        else:
-            sinopsis = 'NA'
-
         #extraemos direccion
         a_directores = []
         direccion = soup.find('dd', attrs={'class': 'directors'})
@@ -167,6 +165,51 @@ def scrap(id, movie):
             for directors in direccion.find_all('span', attrs={'itemprop': 'director'}):
                 directors_name = directors.find('span', attrs={'itemprop': 'name'})
                 a_directores.append(directors_name.text.strip())
+
+        # extraemos guión, musica, fotografía y productora
+        a_guion = []
+        a_musica = []
+        a_fotografia = []
+        a_productora = []
+        creditos = soup.dd
+        # print(creditos.text.strip())
+        while creditos is not None:
+            # print(creditos.text.strip())
+            tagPrevio = creditos.find_previous_sibling('dt')
+            # print(tagPrevio.text.strip())
+            if (tagPrevio.text.strip() == 'Guion'):
+                # print(creditos)
+                for guionista in creditos.find_all('span', attrs={'class': 'nb'}):
+                    guionista = guionista.span
+                    # print(guionista)
+                    a_guion.append(guionista.text.strip())
+            if (tagPrevio.text.strip() == 'Música'):
+                # print(creditos)
+                for musico in creditos.find_all('span', attrs={'class': 'nb'}):
+                    musico = musico.span
+                    # print(musico)
+                    a_musica.append(musico.text.strip())
+            if (tagPrevio.text.strip() == 'Fotografía'):
+                # print(creditos)
+                for fotografo in creditos.find_all('span', attrs={'class': 'nb'}):
+                    fotografo = fotografo.span
+                    # print(fotografo)
+                    a_fotografia.append(fotografo.text.strip())
+            if (tagPrevio.text.strip() == 'Productora'):
+                # print(creditos)
+                for productor in creditos.find_all('span', attrs={'class': 'nb'}):
+                    productor = productor.span
+                    # print(fotografo)
+                    a_productora.append(productor.text.strip())
+            creditos = creditos.find_next_sibling('dd')
+        if not a_guion:
+            a_guion.append('NA')
+        if not a_musica:
+            a_musica.append('NA')
+        if not a_fotografia:
+            a_fotografia.append('NA')
+        if not a_productora:
+            a_productora.append('NA')
 
         # extraemos reparto
         a_actores =[]
@@ -187,20 +230,32 @@ def scrap(id, movie):
             else:
                 a_genero.append(genero.a.contents)
 
+        # extraemos sinopsis
+        dl = soup.find('dd', attrs={'itemprop': 'description'})
+        if dl != None:
+            sinopsis = dl.text.strip()
+        else:
+            sinopsis = 'NA'
+
         # añadimos a cada una de las listas el dato correspondiente a la ultima pelicula
-        id_list.append(int(id))
+        id_list.append(id.split()[0])
         titulo_list.append(titulo)
         año_list.append(año)
         duracion_list.append(duracion)
         pais_list.append(pais)
         direccion_list.append(a_directores)
+        guion_list.append(a_guion)
+        musica_list.append(a_musica)
+        fotografia_list.append(a_fotografia)
+        productora_list.append(a_productora)
         reparto_list.append(a_actores)
         genero_list.append(a_genero)
         sinopsis_list.append(sinopsis)
         web_list.append("https://www.filmaffinity.com/es/film" + str(int(id)) + ".html")
 
 # Definición de la función de guardado de datos
-def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, reparto_list, genero_list, sinopsis_list, web_list):
+def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, guion_list, musica_list,
+fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, web_list):
 
     if os.path.exists('filmaffinity.csv'): 
 #        print('filmaffinity exists')
@@ -213,12 +268,16 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccio
                            'duracion (min)': [],
                            'pais': [],
                            'direccion': [],
+                           'guion': [],
+                           'musica': [],
+                           'fotografia': [],
+                           'productora': [],
                            'reparto': [],
                            'genero': [],
                            'sinopsis': [],
                            'web': [],
                            },
-                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'reparto', 'genero', 'sinopsis', 'web'])
+                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'guion', 'musica', 'fotografia', 'productora', 'reparto', 'genero', 'sinopsis', 'web'])
 
         
     # creamos una dataframe con  todas las listas
@@ -228,12 +287,16 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccio
                            'duracion (min)': duracion_list,
                            'pais': pais_list,
                            'direccion': direccion_list,
+                           'guion': guion_list,
+                           'musica': musica_list,
+                           'fotografia': fotografia_list,
+                           'productora': productora_list,
                            'reparto': reparto_list,
                            'genero': genero_list,
                            'sinopsis': sinopsis_list,
                            'web': web_list,
                            },
-                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'reparto', 'genero', 'sinopsis', 'web'])
+                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'guion', 'musica', 'fotografia', 'productora', 'reparto', 'genero', 'sinopsis', 'web'])
 
     
     df = df.append(new_df)
@@ -246,7 +309,7 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccio
 stop = False
 
 # bucle para descargar las ids de todo filmaffinity
-for i in movielist:
+for i in testList:
     # Si se ha llegado al límite de peticiones al servidor paramos el bucle principal
     if stop:
         break
@@ -274,5 +337,6 @@ for i in movielist:
                     getFilms(ident_list)
 
 # Finalmente almacenamos los datos en Disco
-saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, reparto_list, genero_list, sinopsis_list, web_list)
+saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, guion_list, musica_list,
+fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, web_list)
 print('Terminado. Películas descargadas: ', contador)
