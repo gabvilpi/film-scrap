@@ -47,6 +47,8 @@ productora_list = []
 reparto_list = []
 genero_list = []
 sinopsis_list = []
+nota_list = []
+votaciones_list = []
 web_list = []
 
 # Lectura del fichero que contiene los IDs descargados
@@ -237,6 +239,21 @@ def scrap(id, movie):
         else:
             sinopsis = 'NA'
 
+        # extraemos nota
+        dl = soup.find('div', attrs={'id': 'movie-rat-avg'})
+        if dl != None:
+            nota = dl.text.strip()
+        else:
+            nota = 'NA'
+
+        # extraemos votaciones
+        dl = soup.find('div', attrs={'id': 'movie-count-rat'})
+        if dl != None:
+            dl.span
+            votaciones = dl.text.strip().split()[0]
+        else:
+            votaciones = 'NA'
+
         # añadimos a cada una de las listas el dato correspondiente a la ultima pelicula
         id_list.append(id.split()[0])
         titulo_list.append(titulo)
@@ -251,11 +268,13 @@ def scrap(id, movie):
         reparto_list.append(a_actores)
         genero_list.append(a_genero)
         sinopsis_list.append(sinopsis)
+        nota_list.append(nota)
+        votaciones_list.append(votaciones)
         web_list.append("https://www.filmaffinity.com/es/film" + str(int(id)) + ".html")
 
 # Definición de la función de guardado de datos
 def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, guion_list, musica_list,
-fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, web_list):
+fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, nota_list, votaciones_list, web_list):
 
     if os.path.exists('filmaffinity.csv'): 
 #        print('filmaffinity exists')
@@ -275,9 +294,11 @@ fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, web_
                            'reparto': [],
                            'genero': [],
                            'sinopsis': [],
+                           'nota': [],
+                           'votaciones': [],
                            'web': [],
                            },
-                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'guion', 'musica', 'fotografia', 'productora', 'reparto', 'genero', 'sinopsis', 'web'])
+                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'guion', 'musica', 'fotografia', 'productora', 'reparto', 'genero', 'sinopsis', 'nota', 'votaciones', 'web'])
 
         
     # creamos una dataframe con  todas las listas
@@ -294,9 +315,11 @@ fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, web_
                            'reparto': reparto_list,
                            'genero': genero_list,
                            'sinopsis': sinopsis_list,
+                           'nota': nota_list,
+                           'votaciones': votaciones_list,
                            'web': web_list,
                            },
-                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'guion', 'musica', 'fotografia', 'productora', 'reparto', 'genero', 'sinopsis', 'web'])
+                          columns=['id', 'titulo', 'año', 'duracion (min)', 'pais', 'direccion', 'guion', 'musica', 'fotografia', 'productora', 'reparto', 'genero', 'sinopsis',  'nota', 'votaciones', 'web'])
 
     
     df = df.append(new_df)
@@ -338,5 +361,5 @@ for i in testList:
 
 # Finalmente almacenamos los datos en Disco
 saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, guion_list, musica_list,
-fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, web_list)
+fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, nota_list, votaciones_list, web_list)
 print('Terminado. Películas descargadas: ', contador)
