@@ -358,8 +358,25 @@ for i in testList:
                         if int(j) not in list(movies_id['id']):
                             ident_list.append(j)
                     getFilms(ident_list)
+                    # Finalmente almacenamos los datos en Disco
+                    saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, guion_list, musica_list,
+                    fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, nota_list, votaciones_list, web_list)
+                    # Vaciamos las listas
+                    id_list = []
+                    titulo_list = []
+                    año_list = []
+                    duracion_list = []
+                    pais_list = []
+                    direccion_list = []
+                    guion_list = []
+                    musica_list = []
+                    fotografia_list = []
+                    productora_list = []
+                    reparto_list = []
+                    genero_list = []
+                    sinopsis_list = []
+                    nota_list = []
+                    votaciones_list = []
+                    web_list = []
 
-# Finalmente almacenamos los datos en Disco
-saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccion_list, guion_list, musica_list,
-fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, nota_list, votaciones_list, web_list)
 print('Terminado. Películas descargadas: ', contador)
