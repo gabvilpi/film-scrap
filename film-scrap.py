@@ -11,7 +11,7 @@ import os
 from random import shuffle
 
 # Habilitar TOR para peticiones anónimas. REQUIERE TOR INSTALADO!
-TOR = False
+TOR = True
 
 if TOR:
     socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, '127.0.0.1', 9150)
@@ -21,11 +21,11 @@ if TOR:
 movielist = [
 "0-9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
 "W", "X", "Y", "Z"]
-shuffle(movielist)
+#shuffle(movielist)
 
 # testList es un listado de prueba
 testList = ["X", "Y", "Z"]
-shuffle(testList)
+#shuffle(testList)
 
 # Contador de películas descargadas
 contador = 0
@@ -332,7 +332,7 @@ fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, nota
 stop = False
 
 # bucle para descargar las ids de todo filmaffinity
-for i in testList:
+for i in movielist:
     # Si se ha llegado al límite de peticiones al servidor paramos el bucle principal
     if stop:
         break
