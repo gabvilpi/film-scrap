@@ -10,8 +10,28 @@ import pandas as pd
 import os
 from random import shuffle
 
-# Habilitar TOR para peticiones anónimas. REQUIERE TOR INSTALADO!
-TOR = True
+# Prompt inicial
+print('Web scrapping de la web filmaffinity.com')
+
+
+while True:
+    tor_q = input('Utilizar TOR pra descargas anonimas? (requiere TOR instalado) 0=NO, 1=SI')
+    if tor_q == '0':
+        break
+    elif tor_q == '1':
+        break
+
+while True:
+    list_q = input('Descargar test o web completa? 0=TEST, 1=COMPLETA')
+    if list_q == '0':
+        break
+    elif list_q == '1':
+        break
+
+        
+if tor_q == '0': TOR = False        
+if tor_q == '1': TOR = True 
+
 
 if TOR:
     socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, '127.0.0.1', 9150)
@@ -21,11 +41,15 @@ if TOR:
 movielist = [
 "0-9", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
 "W", "X", "Y", "Z"]
-#shuffle(movielist)
+shuffle(movielist)
 
 # testList es un listado de prueba
-testList = ["X", "Y", "Z"]
-#shuffle(testList)
+testlist = ["X", "Y", "Z"]
+shuffle(testlist)
+
+if list_q == '0': download_list = testlist        
+if list_q == '1': download_list = movielist
+
 
 # Contador de películas descargadas
 contador = 0
@@ -53,10 +77,8 @@ web_list = []
 
 # Lectura del fichero que contiene los IDs descargados
 if os.path.exists('movies_id.csv'):
-#    print('movies_id exists')
     movies_id = pd.read_csv('movies_id.csv')
 else:
-#    print('movies_id does not exist')
     movies_id = pd.DataFrame({'id':[],'downloaded':[]}, columns = ['id', 'downloaded'])
 
 # definición de función de descarga de la URL
@@ -86,13 +108,12 @@ def getFilms(ident_list):
         global movies_id
         movies_id = movies_id.append(new_movies_id)
 
-        #movies_id.to_csv('movies_id.csv', index = False, encoding='utf-8')
-
         # Descargamos la página de cada película a partir de su identificador
         for j in movies_id.loc[movies_id['downloaded']==0, 'id']:
             movie_url = "https://www.filmaffinity.com/es/film" + str(int(j)) + ".html"
             movie = download(movie_url)
             if movie is not None:
+
                 # Realizamos scrap de la web de la película. Si la función devuelve True paramos el bucle (Too many requests?)
                 if scrap(j, movie):
                     print("Error: Fallo en el scrap. Posible too many requests. Ve a https://www.filmaffinity.com is pasa el captcha o vuelve a intentarlo en un rato")
@@ -104,17 +125,9 @@ def getFilms(ident_list):
 
 # definición de función para realizar scrap
 def scrap(id, movie):
-    # (PENDIENTE) Una vez descargada la página extraemos la información de la película
-    # print(movie.read())
-
     # Parseamos el código HTML para navegar por las etiquetas
     soup = BeautifulSoup(movie, 'html.parser')
 
-    # Vemos el código HTML correctamente
-    # fixed_html = soup.prettify()
-    # print(fixed_html)
-
-    # extraemos nombre
     # Buscamos entre las etiquetas dl la que tenga la clase movie-info
     dl = soup.find('dl', attrs={'class': 'movie-info'})
 
@@ -122,16 +135,14 @@ def scrap(id, movie):
         # Paramos. No se encuentra movie-info, posible 'Too many requests'
         return True
     else:
-        # Vemos solo la parte de movie-info
-        # print(dl)
-
         # Seleccionamos el primer elemento dd
         dd = dl.find('dd')
         if dd != None:
             titulo = dd.text.strip()
+            
             # quitamos 'aka' en los casos en los que existe en el titulo
             if titulo[-3:] == 'aka': titulo = titulo[:-3].strip()
-            # print('id: %d , titulo: %s' % (int(id), titulo))
+
         else:
             titulo = 'NA'
 
@@ -174,34 +185,33 @@ def scrap(id, movie):
         a_fotografia = []
         a_productora = []
         creditos = soup.dd
-        # print(creditos.text.strip())
+
         while creditos is not None:
-            # print(creditos.text.strip())
             tagPrevio = creditos.find_previous_sibling('dt')
-            # print(tagPrevio.text.strip())
+
             if (tagPrevio.text.strip() == 'Guion'):
-                # print(creditos)
+
                 for guionista in creditos.find_all('span', attrs={'class': 'nb'}):
                     guionista = guionista.span
-                    # print(guionista)
+
                     a_guion.append(guionista.text.strip())
             if (tagPrevio.text.strip() == 'Música'):
-                # print(creditos)
+
                 for musico in creditos.find_all('span', attrs={'class': 'nb'}):
                     musico = musico.span
-                    # print(musico)
+
                     a_musica.append(musico.text.strip())
             if (tagPrevio.text.strip() == 'Fotografía'):
-                # print(creditos)
+
                 for fotografo in creditos.find_all('span', attrs={'class': 'nb'}):
                     fotografo = fotografo.span
-                    # print(fotografo)
+
                     a_fotografia.append(fotografo.text.strip())
             if (tagPrevio.text.strip() == 'Productora'):
-                # print(creditos)
+
                 for productor in creditos.find_all('span', attrs={'class': 'nb'}):
                     productor = productor.span
-                    # print(fotografo)
+
                     a_productora.append(productor.text.strip())
             creditos = creditos.find_next_sibling('dd')
         if not a_guion:
@@ -255,7 +265,7 @@ def scrap(id, movie):
             votaciones = 'NA'
 
         # añadimos a cada una de las listas el dato correspondiente a la ultima pelicula
-        id_list.append(id.split()[0])
+        id_list.append(id)
         titulo_list.append(titulo)
         año_list.append(año)
         duracion_list.append(duracion)
@@ -277,10 +287,8 @@ def saveData(id_list, titulo_list, año_list, duracion_list, pais_list, direccio
 fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, nota_list, votaciones_list, web_list):
 
     if os.path.exists('filmaffinity.csv'): 
-#        print('filmaffinity exists')
         df = pd.read_csv('filmaffinity.csv')
     else:
-#        print('filmaffinity does not exist')
         df = pd.DataFrame({'id': [],
                            'titulo': [],
                            'año': [],
@@ -332,7 +340,7 @@ fotografia_list, productora_list, reparto_list, genero_list, sinopsis_list, nota
 stop = False
 
 # bucle para descargar las ids de todo filmaffinity
-for i in movielist:
+for i in download_list:
     # Si se ha llegado al límite de peticiones al servidor paramos el bucle principal
     if stop:
         break
