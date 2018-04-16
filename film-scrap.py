@@ -31,7 +31,7 @@ while True:
         
 if tor_q == '0': TOR = False        
 if tor_q == '1': TOR = True 
-
+ 
 
 if TOR:
     socks.setdefaultproxy(socks.PROXY_TYPE_SOCKS5, '127.0.0.1', 9150)
